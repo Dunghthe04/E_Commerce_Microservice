@@ -1,0 +1,26 @@
+# ========================
+# 1. Node.js & React
+# ========================
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+.env
+.env.local
+
+# ========================
+# 2. .NET Core & C#
+# ========================
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+
+# ========================
+# 3. OS & Editor System
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
