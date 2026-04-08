@@ -1,8 +1,14 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -12,12 +18,18 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/products", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return new[]
+    {
+        new { Id = 1, Name = "Laptop Gaming", Price = 1500 },
+        new { Id = 2, Name = "Chuột không dây", Price = 25 },
+        new { Id = 3, Name = "Bàn phím cơ", Price = 100 }
+    };
+});
 
 app.MapGet("/weatherforecast", () =>
 {
@@ -26,7 +38,7 @@ app.MapGet("/weatherforecast", () =>
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
+            "Catalog Service test data"
         ))
         .ToArray();
     return forecast;
