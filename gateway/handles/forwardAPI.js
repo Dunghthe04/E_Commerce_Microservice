@@ -21,8 +21,8 @@ async function forwardGet(serviceUrl, req,res){
         return res.status(response.status).json(response.data);
     } catch (error) {
         //Nếu axios throw lỗi (microservice lỗi, mạng, timeout…)
-        return res.status(err.response?.status || 502).json(
-            err.response?.data || {message: "Downstream service lỗi"}
+        return res.status(error.response?.status || 502).json(
+            error.response?.data || {message: "Downstream service lỗi"}
         );
     }
 }

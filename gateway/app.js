@@ -1,5 +1,7 @@
 const express= require("express")
 const cors=require("cors")
+// Bỏ qua lỗi SSL self-signed trong môi trường dev
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const bodyParser=require("body-parser")
 const passport=require("passport")
 const {createProxyMiddleware}=require("http-proxy-middleware");

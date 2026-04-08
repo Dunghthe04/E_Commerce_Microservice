@@ -1,18 +1,16 @@
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // app.UseSwagger() in .NET 8, but for now we skip to keep it simple
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 var summaries = new[]
 {
@@ -33,7 +31,19 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
+// Mock Login Endpoint
+app.MapPost("/login", (LoginRequest request) =>
+{
+    if (request.Username == "admin" && request.Password == "admin")
+    {
+        return Results.Ok(new { isAuthenticated = true, user = "admin" });
+    }
+    return Results.Unauthorized();
+});
+
 app.Run();
+
+record LoginRequest(string Username, string Password);
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
