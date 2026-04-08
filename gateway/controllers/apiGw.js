@@ -24,7 +24,6 @@ async function forwardRequest(req, res) {
         req.forwardPath = `/${parts.slice(3).join("/")}`;
 
         //điều hướng theo pthuc
-        if (req.method === "OPTIONS") return res.sendStatus(200);
         if (req.method === "GET") return forwardApi.forwardGet(serviceUrl, req, res);
         if (req.method === "POST") return forwardApi.forwardPost(serviceUrl, req, res);
 
@@ -38,4 +37,4 @@ async function forwardRequest(req, res) {
     }
 
 }
-module.exports = { forwardRequest };
+module.exports={forwardRequest};
