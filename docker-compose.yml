@@ -1,0 +1,35 @@
+version: '3.8'
+
+# Bắt đầu khai báo các container (service)
+services:
+  # Khai báo container SQL Server
+  sqlserver: 
+    # Tên image được sử dụng để tạo container, Docker sẽ tự download nếu chưa có
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # Tên của container
+    container_name: mssql_server
+    # Cổng được sử dụng để truy cập container
+    ports:
+      - "1433:1433"
+    # Biến môi trường được sử dụng để cấu hình container
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Dunghoang2004
+    volumes:
+      - mssql_data:/var/opt/mssql
+  
+  # Khai báo container RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    platform: linux/amd64  # Thêm dòng này để ép đúng kiến trúc
+    container_name: rabbitmq_server
+    ports:
+      - "5672:5672"   # RabbitMQ port
+      - "15672:15672" # Management UI port
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+
+volumes:
+  mssql_data:
+

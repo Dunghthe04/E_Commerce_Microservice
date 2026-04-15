@@ -1,51 +1,71 @@
+using IdentityService.Data;
+using IdentityService.Models;
+using IdentityService.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// --- 1. ĐĂNG KÝ DỊCH VỤ (Dependency Injection) ---
+
+// Khai báo Controller
+builder.Services.AddControllers();
+
+// Cấu hình Database EF Core (Kết nối SQL Server từ Docker)
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Cấu hình ASP.NET Core Identity (Quản lý User/Password)
+// Tọa hệ thống quản lý user+ role
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Cấu hình Xác thực JWT (Authentication)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false; // Tắt HTTPS yêu cầu trong môi trường DEV
+    options.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]!))
+    };
+});
+
+// Đăng ký dịch vụ AuthService để Controller có thể Inject vào sử dụng
+// Khi cần IAuthService thì sẽ trả về AuthService
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- 2. CẤU HÌNH PIPELINE (Middlewares) ---
+
 if (app.Environment.IsDevelopment())
 {
-    // app.UseSwagger() in .NET 8, but for now we skip to keep it simple
+    // Có thể thêm Swagger ở đây
 }
 
-// app.UseHttpsRedirection();
+// Kích hoạt Middleware Xác thực (Phải đặt TRƯỚC Authorization)
+app.UseAuthentication();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+// Kích hoạt Middleware Phân quyền
+app.UseAuthorization();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+// Map các route của Controller
+app.MapControllers();
 
-// Mock Login Endpoint
-app.MapPost("/login", (LoginRequest request) =>
-{
-    if (request.Username == "admin" && request.Password == "admin")
-    {
-        return Results.Ok(new { isAuthenticated = true, user = "admin" });
-    }
-    return Results.Unauthorized();
-});
-
+// Chạy ứng dụng
 app.Run();
-
-record LoginRequest(string Username, string Password);
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
