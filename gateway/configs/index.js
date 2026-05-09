@@ -9,7 +9,7 @@ require("dotenv").config();
  */
 module.exports = {
   SERVER_PORT: Number(process.env.GATEWAY_PORT || 8080),
-  JWT_SECRET: process.env.JWT_SECRET || "CHANGE_ME_IN_ENV",
+  JWT_SECRET: process.env.JWT_SECRET || "smart_pos_super_secret_2026_very_secure_key_123456",
   CDN_TARGET: process.env.CDN_TARGET || "http://localhost:3901",
 
   // Cổng service C# theo launchSettings hiện tại trong project Smart-POS

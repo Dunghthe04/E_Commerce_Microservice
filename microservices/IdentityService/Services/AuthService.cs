@@ -18,7 +18,7 @@ namespace IdentityService.Services;
 //các pthuc sẽ thực hiện
 public interface IAuthService{
     Task<AuthResponse> RegisterAsync(RegisterRequest request);
-    Task<AuthResponse> LoginAsync(RegisterRequest request);
+    Task<AuthResponse> LoginAsync(LoginRequest request);
 }
 
 /// <summary>
