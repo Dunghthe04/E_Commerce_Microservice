@@ -12,7 +12,11 @@ namespace IdentityService.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
+    //Một object Microsoft cung cấp để quản lý user/login/register/password trong ASP.NET Identity
+    //Công cụ Microsoft để thao tác với bảng ApplicationUser
+    //Có thể Tìm,Tạo user,Check password,Hash password tự động
     private readonly UserManager<ApplicationUser> _userManager;
+    //Service đọc config
     private readonly IConfiguration _configuration;
 
     public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
@@ -52,28 +56,43 @@ public class AuthService : IAuthService
         return new AuthResponse(true, "Login successful", token);
     }
 
+    //Hàm tạo token sau khi login thành công
     private string GenerateJwtToken(ApplicationUser user)
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+        //lấy ra đối tượng Jwt khai báo ở appsettings
+        var jwtSetting = _configuration.GetSection("JwtSettings");
+
+        //ép secret_key từ string về dạng byte vì thuật toán mã hóa HMACSHA56 đọc byte
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSetting["Key"]!));
+        //Dung thuật toán HmacSha256 để tạo chữ ký từ scret_key
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        //Tạo payload(claims)
         var claims = new List<Claim>
         {
+            //clam là mẩu thông tin của user
+            //Sub(Subject) Thường dùng để định danh ID User
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim("FullName", user.FullName ?? ""),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            //Email và fullName: thông tin thêm của user
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim("FullName", user.FullName??""),
+            // Jti (JWT ID): Mã ID duy nhất của token này (có thể dùng để chặn token - revoke/blacklist)
+            new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
         };
 
+        //Tạo đối tượng token gom Payload(claims), thời gian sống(Expires), và chữ ký(signature), còn header microsoft tự tạo
         var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings["DurationInMinutes"])),
-            signingCredentials: creds
-        );
+            issuer: jwtSetting["Issuer"], // Ai tạo ra token này?
+            audience: jwtSetting["Audience"],// Token này dành cho ai đọc?
+            claims: claims,// Dữ liệu payload ở trên
+            expires: DateTime.Now.AddMinutes(Convert.ToDouble(jwtSetting["DurationInMinutes"])),
+            signingCredentials: creds // Chữ ký bảo mật (Kèm Secret Key)
 
+            );
+        // ================= 4. Xuất Token thành chuỗi String =================
+        // Bên C#, đối tượng token ở trên chỉ là class. Ta phải dùng JwtSecurityTokenHandler để "biên dịch" (WriteToken)
+        // class đó thành chuỗi ký tự String dài ngoằng mà frontend nhận được.
+        // Đây chính là kết quả cuối cùng giống hệt giá trị trả về của jwt.sign(...)
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

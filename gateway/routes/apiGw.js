@@ -14,14 +14,14 @@
 // - Các endpoint khác đều yêu cầu token hợp lệ trong header Authorization: Bearer <token>.
 
 const express = require("express");
-const passport= require(passport);
+const passport = require("passport");
 
 //import file cấu hình passport jwt strategy
 require("../middlewares/passport");
 
 //import controller để forward request sang service tương ứng
-const {forwardRequest} = require("../controllers/apiGw")
-const router=express.Router();
+const { forwardRequest } = require("../controllers/apiGw")
+const router = express.Router();
 
 // Express 5 không hỗ trợ pattern "/*" như Express 4
 // nên dùng router.use() để bắt tất cả request.
@@ -30,11 +30,11 @@ const router=express.Router();
 // app.use("/api", apiGwRoute)
 //
 // nên mọi request /api/* sẽ chạy qua đây
-router.use((req,res,next)=>{
+router.use((req, res, next) => {
     //cho phép endpoint login mà không cần token
     //ví dụ
     //POST /api/IDENTITY/LOGIN -> cho phép gọi mà không cần token
-    if(req.originalUrl.toUpperCase().includes("/IDENTITY/LOGIN")){
+    if (req.originalUrl.toUpperCase().includes("/IDENTITY/LOGIN")) {
         return next();
     }
 
@@ -46,8 +46,8 @@ router.use((req,res,next)=>{
     //4. so sánh signature(1) trong token với signature(2) mới tạo
     //5. nếu giống nhau → token hợp lệ → gán payload vào req.user → gọi next() để tiếp tục xử lý request
     //6. nếu khác nhau → token không hợp lệ → trả về 401 Unauthorized
-    passport.authenticate("jwt",{session: false})(req,res,next);
+    passport.authenticate("jwt", { session: false })(req, res, next);
 },
-forwardRequest);
+    forwardRequest);
 
-module.exports=router;
+module.exports = router;
